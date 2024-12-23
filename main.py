@@ -38,3 +38,4 @@ def create_app():
         db.create_all()  # Ensure all models are loaded before creating tables
 
     return app
+
