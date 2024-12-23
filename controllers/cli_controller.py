@@ -1,6 +1,6 @@
 from flask import Blueprint  # type: ignore
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask # type: ignore
+from flask_sqlalchemy import SQLAlchemy # type: ignore
 from init import db
 from models.orders import Orders
 from models.customers import Customers

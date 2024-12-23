@@ -33,6 +33,10 @@ def create_supplier():
         # Get information from the request body
         body_data = request.get_json()
         
+        # Ensure required fields are provided
+        if not body_data.get("name") or not body_data.get("email"):
+            return {"Message": "Supplier name and email are required"}, 400
+        
         # Create a new supplier instance
         new_supplier = Suppliers(
             name=body_data.get("name"),
@@ -51,38 +55,28 @@ def create_supplier():
     except IntegrityError as err:
         print(err.orig.pgcode)
         if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
-            # Not null violation
             return {"Message": f"The field {err.orig.diag.column_name} is required"}, 409
         
         if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
-            # Unique constraint violation
             return {"Message": "Email or Phone number already in use"}, 409
 
 # DELETE - /suppliers/<id> - DELETE
 @suppliers_bp.route("/<int:supplier_id>", methods=["DELETE"])
 def delete_supplier(supplier_id):
-    # Find the supplier to be deleted using supplier_id
-    stmt = db.select(Suppliers).filter_by(supplier_id=supplier_id)  # Use supplier_id here
+    stmt = db.select(Suppliers).filter_by(supplier_id=supplier_id)
     supplier = db.session.scalar(stmt)
 
-    # If the supplier exists
     if supplier:
-        # Fetch and delete all associated inventory items
+        # Fetch and delete associated inventory items
         stmt = db.select(Inventory).filter_by(supplier_id=supplier_id)
         inventory_items = db.session.scalars(stmt)
         
-        # Delete associated inventory items
         for item in inventory_items:
             db.session.delete(item)
 
-        # Delete the supplier
         db.session.delete(supplier)
         db.session.commit()
-
-        # Return success message
         return {"Message": f"Supplier '{supplier.name}' and associated inventory items deleted successfully"}, 200
-
-    # If the supplier doesn't exist
     else:
         return {"Message": f"Supplier with id '{supplier_id}' does not exist"}, 404
 
@@ -90,24 +84,17 @@ def delete_supplier(supplier_id):
 @suppliers_bp.route("/<int:supplier_id>", methods=["PUT", "PATCH"])
 def update_supplier(supplier_id):  
     try:  
-        # Find the supplier to be updated
-        stmt = db.select(Suppliers).filter_by(supplier_id=supplier_id)  # Use supplier_id here
+        stmt = db.select(Suppliers).filter_by(supplier_id=supplier_id)
         supplier = db.session.scalar(stmt)
         
-        # Get the data to be updated 
         body_data = request.get_json()
         
-        # If supplier exists
         if supplier:
-            # Update the supplier fields if provided
             supplier.name = body_data.get("name") or supplier.name
-            supplier.email = body_data.get("contact_email") or supplier.email
-            supplier.phone_number = body_data.get("phone_number") or supplier.phone_number 
+            supplier.email = body_data.get("email") or supplier.email  # Fixed email key here
+            supplier.phone_number = body_data.get("phone_number") or supplier.phone_number
             
-            # Commit the changes to the database
             db.session.commit()
-            
-            # Return the updated supplier data
             return supplier_schema.dump(supplier)
         else:
             return {"Message": f"Supplier with id {supplier_id} does not exist"}, 404

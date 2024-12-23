@@ -5,6 +5,7 @@ from init import db
 from models.inventory import Inventory, inventory_schema, inventory_schema_many
 from models.suppliers import Suppliers
 from models.records import Records
+from flask import jsonify
 
 # Define the blueprint for the inventory
 inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
@@ -32,28 +33,43 @@ def get_inventory_item(inventory_id):
         # error message if inventory item not found
         return {"message": f"Inventory item with id {inventory_id} does not exist"}, 404
 
+
 # Filter inventory by supplier_id - /inventory/filter_by_supplier_id?supplier_id=<supplier_id> - GET
 @inventory_bp.route("/filter_by_supplier_id", methods=["GET"])
 def get_inventory_by_supplier_id():
     supplier_id = request.args.get("supplier_id", type=int)
     
+    # Check if supplier_id is not provided
     if not supplier_id:
-        return {"message": "Supplier ID is required."}, 400  
+        return jsonify({"message": "Supplier number (ID) is required."}), 404  
     
     # Check if the supplier exists
     supplier = db.session.get(Suppliers, supplier_id)
     if not supplier:
-        return {"message": f"No supplier found with id {supplier_id}"}, 404  
-    
+        return jsonify({"message": f"No supplier found with id {supplier_id}"}), 404
+
     # Fetch the inventory items for the given supplier
     stmt = db.select(Inventory).filter_by(supplier_id=supplier_id)
     inventory_list = db.session.scalars(stmt)
     
-    if inventory_list:
-        data = inventory_schema_many.dump(inventory_list)
-        return data  
-    else:
-        return {"message": f"No inventory items found for supplier with id {supplier_id}"}, 404 
+    # Debugging - print the inventory list
+    print(f"Inventory List for Supplier ID {supplier_id}: {inventory_list}")
+
+    # If no inventory records are found
+    if not inventory_list:
+        return jsonify({"message": f"No inventory items found for supplier with id {supplier_id}"}), 404
+    
+    # Return the inventory data in JSON format
+    data = inventory_schema_many.dump(inventory_list)
+    return jsonify(data)
+
+    
+    # Return the inventory data in JSON format
+    data = inventory_schema_many.dump(inventory_list)
+    return jsonify(data)
+
+
+
 
 # CREATE - /inventory - POST
 @inventory_bp.route("/", methods=["POST"])
