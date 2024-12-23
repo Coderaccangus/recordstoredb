@@ -71,8 +71,8 @@ def create_order():
         #Create customer instance
         new_order = Orders(
             customer_id=body_data.get("customer_id"),
+            record_id=body_data.get("record_id"),
             order_date=body_data.get("order_date"),
-            total_amount=body_data.get("total_amount"),
         )
         # add to the session 
         db.session.add(new_order)

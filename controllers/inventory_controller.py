@@ -2,7 +2,7 @@ from flask import Blueprint, request  # type: ignore
 from sqlalchemy.exc import IntegrityError  # type: ignore
 from psycopg2 import errorcodes  # type: ignore
 from init import db
-from models.inventory import Inventory, inventory_schema, inventory_schema
+from models.inventory import Inventory, inventory_schema, inventory_schema_many
 from models.suppliers import Suppliers
 from models.records import Records
 
@@ -14,7 +14,7 @@ inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 def get_inventory():
     stmt = db.select(Inventory)
     inventory_list = db.session.scalars(stmt)
-    data = inventory_schema.dump(inventory_list)
+    data = inventory_schema_many.dump(inventory_list)
     return data
 
 # READ one - /inventory/<id> - GET
@@ -50,7 +50,7 @@ def get_inventory_by_supplier_id():
     inventory_list = db.session.scalars(stmt)
     
     if inventory_list:
-        data = inventory_schema.dump(inventory_list)
+        data = inventory_schema_many.dump(inventory_list)
         return data  
     else:
         return {"message": f"No inventory items found for supplier with id {supplier_id}"}, 404 
@@ -63,14 +63,12 @@ def create_inventory_item():
         body_data = request.get_json()
 
         # Ensure the required fields are present
-        record_id = body_data.get("record_id")
-        quantity = body_data.get("quantity")
-        price = body_data.get("price")
-        shipment_date = body_data.get("shipment_date")
         supplier_id = body_data.get("supplier_id")
-        added_date = body_data.get("added_date")
+        record_id = body_data.get("record_id")
+        price = body_data.get("price")
+        stock_quantity = body_data.get("stock_quantity")
 
-        if not all([record_id, quantity, price, shipment_date, supplier_id, added_date]):
+        if not all([supplier_id, record_id]):
             return {"message": "All fields are required."}, 400
 
         # Check if the record exists
@@ -87,10 +85,8 @@ def create_inventory_item():
         new_inventory_item = Inventory(
             record_id=record_id,
             supplier_id=supplier_id,
-            quantity=quantity,
             price=price,
-            shipment_date=shipment_date,
-            added_date=added_date
+            stock_quantity = stock_quantity
         )
 
         # Add to the session and commit

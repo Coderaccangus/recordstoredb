@@ -30,6 +30,8 @@ def seed_all_data():
     ]
     db.session.add_all(customers)
 
+    print("Customers seeded")
+
     # Create some sample suppliers
     suppliers = [
         Suppliers(name="Supplier1", email="Supplier1@email.com", phone_number="0477777777"),
@@ -39,7 +41,7 @@ def seed_all_data():
 
     # Commit changes for customers and suppliers
     db.session.commit()
-    print("Customers and Suppliers seeded")
+    print("Suppliers seeded")
 
     # Create sample records
     records = [
@@ -52,12 +54,9 @@ def seed_all_data():
     print("Records seeded")
 
     # Create orders with proper date formatting
-    order_date1 = datetime.strptime("10/09/24", "%d/%m/%y").date()
-    order_date2 = datetime.strptime("11/06/23", "%d/%m/%y").date()
-
     orders = [
-        Orders(customer_id=1, record_id=1, order_date=order_date1),
-        Orders(customer_id=2, record_id=2, order_date=order_date2)
+        Orders(customer_id=1, record_id=1, order_date="09/06/22"),
+        Orders(customer_id=2, record_id=2, order_date="04/04/23")
     ]
     db.session.add_all(orders)
     db.session.commit()

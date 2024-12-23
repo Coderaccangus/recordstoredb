@@ -7,9 +7,6 @@ from models.customers import Customers, customers_schema, customer_schema
 
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
 
-
-
-
 # READ all - /customers - GET
 @customers_bp.route("/")
 def get_customers():

@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError  # type: ignore
 from psycopg2 import errorcodes  # type: ignore
 from init import db
 from models.records import Records, records_schema, record_schema
-from models.inventory import Inventory, inventory_schema,inventory_schema_many  # Ensure Inventory and InventoryShipments are imported
+from models.inventory import Inventory, inventory_schema, inventory_schema_many  # Ensure Inventory and InventoryShipments are imported
 
 records_bp = Blueprint("records", __name__, url_prefix="/records")
 
@@ -58,16 +58,12 @@ def create_record():
         # Get the request data
         body_data = request.get_json()
 
-        # Ensure required fields are present
         title = body_data.get("title")
         artist = body_data.get("artist")
         genre = body_data.get("genre")
-        release_date = body_data.get("release_date")
         price = body_data.get("price")
-        stock_quantity = body_data.get("stock_quantity")
-        shipment_id = body_data.get("shipment_id")  # The shipment_id to associate with this record
 
-        if not title or not artist or not genre or not release_date or not price or not stock_quantity:
+        if not title or not artist or not genre:
             return {"message": "All fields are required."}, 400
 
         # Create the new record
@@ -75,17 +71,8 @@ def create_record():
             title=title,
             artist=artist,
             genre=genre,
-            release_date=release_date,
             price=price,
-            stock_quantity=stock_quantity
         )
-
-        # If a shipment_id is provided, associate it with the new record
-        if shipment_id:
-            shipment = inventory_schema_many.query.get(shipment_id)
-            if shipment:
-                # Add the shipment to the new record
-                new_record.shipments.append(shipment)
 
         # Add to the session and commit
         db.session.add(new_record)
@@ -112,7 +99,7 @@ def delete_record(record_id):
     # If record exists, proceed to check for associated shipments
     if record:
         # Check if any inventory shipments are linked to this record
-        shipments_stmt = db.select(InventoryShipments).filter_by(record_id=record_id)
+        shipments_stmt = db.select(Inventory).filter_by(record_id=record_id)
         shipments = db.session.scalars(shipments_stmt).all()
 
         # If there are associated shipments, return an error
