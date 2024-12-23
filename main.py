@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()  # Loads environment variables from .env
+
 import os
-from flask import Flask # type: ignore
+from flask import Flask  # type: ignore
 from init import db, ma
 
 from models.orders import Orders
@@ -19,7 +22,8 @@ def create_app():
     app = Flask(__name__)
 
     # App configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")  # Make sure this is defined in your environment
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # Optional: To avoid unnecessary overhead
 
     # Initialize extensions
     db.init_app(app)
@@ -38,4 +42,3 @@ def create_app():
         db.create_all()  # Ensure all models are loaded before creating tables
 
     return app
-
