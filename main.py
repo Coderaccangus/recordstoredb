@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask # type: ignore
 from init import db, ma
 
 from models.orders import Orders
